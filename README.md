@@ -4,7 +4,7 @@ AI Insights Assistant is a full-stack app that answers natural language question
 
 - SQL (SQLite) for structured queries across movies, viewers, watch activity, reviews, marketing spend, and regional performance
 - PDF reports for unstructured executive and campaign insights
-- CSV data for analytics
+- CSV files read directly with Pandas for analytics (alternative to SQL, user-selectable)
 
 The backend is built with FastAPI and the frontend is a lightweight HTML/React interface.
 
@@ -12,8 +12,10 @@ The backend is built with FastAPI and the frontend is a lightweight HTML/React i
 
 - Multi-source query answering across SQL, PDF, and CSV
 - Intent-based routing for six supported question types
+- User-selectable source: Auto Route, CSV Direct, SQL, or PDF via the UI dropdown
 - Source-aware responses with data payloads
 - All six database tables auto-loaded from CSV on backend startup
+- "Best movie" query returns the single highest-rated title; "best in 2025" returns a ranked list
 - Genre distribution chart via API endpoint
 - Template dropdown in the UI for all six required questions
 
@@ -30,17 +32,21 @@ The backend is built with FastAPI and the frontend is a lightweight HTML/React i
 
 ## How It Works
 
-1. The frontend sends a query to `POST /chat`.
-2. The backend routes by intent:
-   - Comedy keywords → comedy analysis (SQL + PDF)
-   - Compare / vs → title comparison (SQL)
-   - Best / top / 2025 → top titles query (SQL)
-   - Trending / trend → trending title lookup (SQL + PDF)
-   - City / engagement / region → regional performance (SQL)
+1. The frontend sends a query to `POST /chat`. The source preference dropdown prepends `[Use CSV]`, `[Use SQL]`, or `[Use PDF]` to the query when not set to Auto Route. Selecting a template overrides whatever is typed in the input field.
+2. The backend detects the source override first:
+   - `[Use CSV]` → reads CSV files directly with Pandas (`csv_tools.py`)
+   - `[Use PDF]` → searches PDF sections only
+   - Auto Route / `[Use SQL]` → queries SQLite + PDF where relevant
+3. Within each source path, intent is detected by keyword:
+   - Comedy keywords → comedy analysis
+   - Compare / vs → side-by-side title comparison
+   - "Best movie" (no year) → single highest-rated title
+   - Best / top + year → ranked list filtered by year
+   - Trending / trend → trending score lookup
+   - City / engagement / region → regional performance
    - Recommend / leadership / strategy → executive recommendations (PDF + SQL)
    - Anything else → PDF section search, then fallback
-3. The selected tool returns structured data.
-4. The backend formats the answer and includes a source label.
+4. The backend formats the answer and includes a source label (`SQL Database`, `CSV Direct`, `PDF Documents`, `SQL + PDF`, etc.).
 
 ## Project Structure
 
