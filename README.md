@@ -30,6 +30,65 @@ The backend is built with FastAPI and the frontend is a lightweight HTML/React i
 | What explains weak comedy performance? | SQL + PDF |
 | What recommendations would you give for leadership? | PDF + SQL |
 
+## Architecture Diagram
+
+```mermaid
+flowchart TD
+    User(["User (Browser)"])
+
+    subgraph Frontend["Frontend — index.html (React)"]
+        UI["Chat Input\n+ Source Dropdown\n+ Template Dropdown"]
+    end
+
+    subgraph Backend["Backend — FastAPI"]
+        EP["POST /chat"]
+        AI["ai_service.py\nIntent Router"]
+
+        subgraph Sources["Source Paths"]
+            CSV_PATH["CSV Direct\ncsv_tools.py\n(Pandas)"]
+            SQL_PATH["SQL Path\nsql_tools.py\n(SQLAlchemy)"]
+            PDF_PATH["PDF Path\npdf_tools.py\n(PyPDF)"]
+        end
+
+        subgraph Intents["Intent Detection"]
+            I1["Best movie / top titles"]
+            I2["Trending title"]
+            I3["Compare titles"]
+            I4["City engagement"]
+            I5["Comedy performance"]
+            I6["Leadership recommendations"]
+        end
+    end
+
+    subgraph DataLayer["Data Layer"]
+        DB[("SQLite\ndata.db")]
+        CSVFILES["CSV Files\nMovies · Viewers\nWatch Activity · Reviews\nMarketing Spend\nRegional Performance"]
+        PDFFILES["PDF Reports\nQuarterly Executive\nCampaign Performance\nContent Roadmap\nPolicy Guidelines\nAudience Behavior"]
+    end
+
+    subgraph Startup["On Startup — db.py"]
+        LOAD["Load all 6 CSVs\ninto SQLite tables"]
+    end
+
+    User -->|"query + source pref"| UI
+    UI -->|"POST /chat"| EP
+    EP --> AI
+
+    AI -->|"[Use CSV]"| CSV_PATH
+    AI -->|"Auto / [Use SQL]"| SQL_PATH
+    AI -->|"[Use PDF]"| PDF_PATH
+
+    AI --> Intents
+
+    SQL_PATH --> DB
+    CSV_PATH --> CSVFILES
+    PDF_PATH --> PDFFILES
+    SQL_PATH -->|"Q2, Q5, Q6"| PDF_PATH
+
+    CSVFILES -->|"startup"| LOAD
+    LOAD --> DB
+```
+
 ## How It Works
 
 1. The frontend sends a query to `POST /chat`. The source preference dropdown prepends `[Use CSV]`, `[Use SQL]`, or `[Use PDF]` to the query when not set to Auto Route. Selecting a template overrides whatever is typed in the input field.
@@ -185,3 +244,27 @@ Example request:
 - PDF retrieval is lexical/token-based, not embedding-based semantic search
 - Intent routing uses keyword matching, not an NLP classifier
 - Database is fully reloaded from CSV on every backend restart
+
+## Notes on Assumptions / Tradeoffs
+
+### Data
+- **Synthetic dataset** — all CSV and PDF data is randomly generated for demo purposes. Titles, ratings, views, and regional figures do not reflect real-world streaming data.
+- **CSV as both source and seed** — CSVs serve two roles: they are loaded into SQLite at startup (SQL path) and also read directly by Pandas (CSV path). This is intentional to demonstrate both access patterns as required, but it means the same underlying data is queried twice in different ways.
+- **Static data** — there is no ingestion pipeline. Updating the data means editing the CSV files and restarting the backend.
+
+### Routing
+- **Keyword matching over NLP** — intent detection uses simple string matching (e.g. "comedy", "trending", "compare"). This is fast and dependency-free but will misroute ambiguous or phrased-differently queries. A classifier or LLM-based router would be more robust.
+- **Routing order matters** — comedy is checked before "perform/best" to avoid "comedy performance" triggering the wrong branch. This ordering is fragile; adding new intents requires careful placement.
+- **Template overrides typed input** — when a template is selected in the UI, it completely replaces whatever the user typed. This is a deliberate UX simplification but can be confusing when both fields are filled.
+- **"Best movie" vs "best titles"** — a query with no year returns the single highest-rated title; a query specifying a year returns a ranked list. This distinction is based on keyword presence, not true semantic understanding.
+
+### Storage
+- **SQLite over a client-server DB** — chosen for zero-config local setup. It has no concurrent write support and is not suitable for production-scale data or multi-user deployments.
+- **DB rebuilt on every restart** — the database is dropped and recreated from CSVs each time the backend starts. This keeps data in sync with the files but means any manual DB edits are lost and startup is slightly slower as datasets grow.
+
+### PDF Retrieval
+- **Lexical scoring over embeddings** — PDF sections are ranked by token overlap with the query. Synonyms and paraphrased questions will score zero even if semantically relevant. Embedding-based retrieval (e.g. with `sentence-transformers`) would handle this better but adds model dependencies.
+- **PDFs re-read on every query** — there is no pre-built index. Each search re-parses all PDF files from disk. Acceptable for five small files; would need caching or a vector store at scale.
+
+### Frontend
+- **No build step** — React and Babel are loaded from CDN. This avoids a Node.js dependency for a demo but is not suitable for production (no bundling, no tree-shaking, slower initial load).
