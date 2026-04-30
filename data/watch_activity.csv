@@ -1,0 +1,51 @@
+activity_id,viewer_id,movie_id,watch_date,watch_duration_min,completion_rate,device,city
+1,1,1,2025-01-16,112,0.98,Mobile,New York
+2,2,2,2024-03-25,95,0.82,TV,Los Angeles
+3,3,3,2024-07-12,118,0.94,Laptop,Chicago
+4,4,1,2025-01-18,114,1.00,TV,Houston
+5,5,4,2025-03-02,88,0.76,Mobile,Phoenix
+6,6,1,2025-01-20,110,0.96,Laptop,London
+7,7,2,2024-03-28,80,0.69,TV,Manchester
+8,8,5,2025-04-07,145,0.99,Mobile,Birmingham
+9,9,1,2025-01-22,113,0.97,TV,Mumbai
+10,10,3,2024-07-15,120,0.96,Laptop,Delhi
+11,11,6,2024-11-05,102,0.88,Mobile,Bangalore
+12,12,1,2025-01-25,115,1.00,TV,Chennai
+13,13,9,2025-02-01,108,0.93,Laptop,Toronto
+14,14,5,2025-04-10,148,1.00,TV,Vancouver
+15,15,7,2025-03-16,52,0.45,Mobile,Montreal
+16,16,2,2024-03-30,90,0.78,Laptop,Sydney
+17,17,1,2025-01-28,112,0.97,TV,Melbourne
+18,18,12,2025-06-14,135,0.98,Mobile,Brisbane
+19,19,3,2024-07-18,116,0.92,TV,Dubai
+20,20,1,2025-01-30,114,0.99,Laptop,Abu Dhabi
+21,21,11,2024-08-12,40,0.35,Mobile,Lagos
+22,22,8,2024-06-20,98,0.85,TV,Accra
+23,23,5,2025-04-12,150,1.00,Laptop,Singapore
+24,24,2,2024-04-02,85,0.74,Mobile,Hong Kong
+25,25,4,2025-03-05,82,0.71,TV,Nairobi
+26,1,9,2025-02-03,106,0.91,Laptop,New York
+27,2,5,2025-04-15,142,0.97,TV,Los Angeles
+28,3,1,2025-02-10,113,0.98,Mobile,Chicago
+29,4,12,2025-06-18,138,0.96,Laptop,Houston
+30,5,6,2024-11-08,100,0.86,TV,Phoenix
+31,6,9,2025-02-05,108,0.93,Mobile,London
+32,7,3,2024-07-20,115,0.93,Laptop,Manchester
+33,8,13,2024-02-18,92,0.80,TV,Birmingham
+34,9,5,2025-04-18,147,0.99,Mobile,Mumbai
+35,10,1,2025-03-01,112,0.97,TV,Delhi
+36,11,7,2025-03-20,45,0.39,Laptop,Bangalore
+37,12,9,2025-02-08,107,0.92,Mobile,Chennai
+38,13,2,2024-04-05,88,0.76,TV,Toronto
+39,14,1,2025-03-05,114,1.00,Laptop,Vancouver
+40,15,19,2024-10-25,32,0.29,Mobile,Montreal
+41,16,5,2025-04-20,146,0.99,TV,Sydney
+42,17,3,2024-07-22,119,0.95,Mobile,Melbourne
+43,18,6,2024-11-10,101,0.87,Laptop,Brisbane
+44,19,9,2025-02-12,105,0.90,TV,Dubai
+45,20,12,2025-06-22,137,0.95,Mobile,Abu Dhabi
+46,1,5,2025-04-22,144,0.98,TV,New York
+47,2,13,2024-02-22,90,0.78,Laptop,Los Angeles
+48,3,9,2025-02-15,108,0.93,Mobile,Chicago
+49,4,6,2024-11-12,103,0.89,TV,Houston
+50,5,1,2025-03-10,113,0.98,Laptop,Phoenix

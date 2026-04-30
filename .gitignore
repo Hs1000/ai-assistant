@@ -1,0 +1,20 @@
+# Environment files
+.env
+.env.*
+
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+backend/venv/
+
+# Local database/artifacts
+*.db
+*.sqlite3
+chart.png
+
+# macOS
+.DS_Store

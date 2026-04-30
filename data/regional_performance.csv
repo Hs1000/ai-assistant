@@ -1,0 +1,41 @@
+region_id,city,country,month,year,total_views,unique_viewers,avg_watch_time_min,engagement_score,top_genre
+1,New York,USA,March,2025,520000,98000,94,88,Action
+2,Los Angeles,USA,March,2025,480000,91000,89,84,Sci-Fi
+3,Chicago,USA,March,2025,310000,62000,86,79,Drama
+4,Houston,USA,March,2025,245000,50000,82,75,Action
+5,Phoenix,USA,March,2025,198000,41000,78,70,Thriller
+6,London,UK,March,2025,430000,85000,92,86,Action
+7,Manchester,UK,March,2025,220000,44000,84,77,Drama
+8,Birmingham,UK,March,2025,180000,37000,80,72,Sci-Fi
+9,Mumbai,India,March,2025,610000,118000,88,83,Action
+10,Delhi,India,March,2025,580000,112000,85,80,Drama
+11,Bangalore,India,March,2025,490000,96000,83,78,Sci-Fi
+12,Chennai,India,March,2025,350000,70000,81,74,Action
+13,Toronto,Canada,March,2025,270000,54000,87,81,Drama
+14,Vancouver,Canada,March,2025,210000,43000,85,79,Action
+15,Montreal,Canada,March,2025,160000,33000,75,65,Comedy
+16,Sydney,Australia,March,2025,290000,58000,86,80,Action
+17,Melbourne,Australia,March,2025,260000,52000,84,78,Sci-Fi
+18,Brisbane,Australia,March,2025,170000,35000,79,71,Drama
+19,Dubai,UAE,March,2025,340000,68000,91,85,Action
+20,Abu Dhabi,UAE,March,2025,195000,40000,88,82,Thriller
+21,Singapore,Singapore,March,2025,285000,57000,90,86,Sci-Fi
+22,Lagos,Nigeria,March,2025,220000,45000,72,62,Action
+23,Accra,Ghana,March,2025,140000,29000,70,58,Drama
+24,Hong Kong,China,March,2025,310000,63000,87,82,Action
+25,Nairobi,Kenya,March,2025,125000,26000,68,55,Sci-Fi
+26,Mexico City,Mexico,March,2025,370000,74000,83,77,Action
+27,Berlin,Germany,March,2025,280000,56000,88,83,Drama
+28,Rome,Italy,March,2025,230000,47000,84,78,Sci-Fi
+29,New York,USA,February,2025,495000,93000,91,85,Action
+30,London,UK,February,2025,410000,81000,90,84,Action
+31,Mumbai,India,February,2025,580000,112000,86,81,Action
+32,Toronto,Canada,February,2025,255000,51000,84,78,Drama
+33,Sydney,Australia,February,2025,270000,54000,83,77,Action
+34,Dubai,UAE,February,2025,320000,64000,89,83,Thriller
+35,Singapore,Singapore,February,2025,270000,54000,88,84,Sci-Fi
+36,New York,USA,January,2025,510000,96000,93,87,Action
+37,London,UK,January,2025,420000,83000,91,85,Action
+38,Mumbai,India,January,2025,595000,115000,87,82,Action
+39,Los Angeles,USA,January,2025,465000,88000,88,83,Action
+40,Tokyo,Japan,March,2025,400000,80000,89,84,Action

@@ -1,0 +1,31 @@
+viewer_id,name,city,country,age,gender,subscription_type,join_date,is_active
+1,Alice Monroe,New York,USA,29,F,Premium,2022-03-10,1
+2,Bob Chen,Los Angeles,USA,35,M,Standard,2021-07-22,1
+3,Carla Diaz,Chicago,USA,42,F,Premium,2020-11-05,1
+4,David Kim,Houston,USA,27,M,Basic,2023-01-18,1
+5,Ethan Brown,Phoenix,USA,31,M,Standard,2022-09-14,1
+6,Fiona Walsh,London,UK,38,F,Premium,2021-04-30,1
+7,George Patel,Manchester,UK,45,M,Standard,2020-08-12,1
+8,Hannah Scott,Birmingham,UK,24,F,Basic,2023-06-01,1
+9,Ivan Torres,Mumbai,India,33,M,Premium,2022-02-17,1
+10,Julia Sharma,Delhi,India,28,F,Standard,2021-12-09,1
+11,Kevin Nair,Bangalore,India,36,M,Basic,2023-03-25,1
+12,Laura Singh,Chennai,India,30,F,Premium,2022-07-08,1
+13,Mike Johnson,Toronto,Canada,41,M,Standard,2021-05-20,1
+14,Nina Ahmed,Vancouver,Canada,26,F,Premium,2023-02-14,1
+15,Oscar Lee,Montreal,Canada,34,M,Basic,2022-10-31,1
+16,Priya Gupta,Sydney,Australia,29,F,Standard,2021-09-03,1
+17,Quinn Davis,Melbourne,Australia,37,M,Premium,2020-12-18,1
+18,Rachel Park,Brisbane,Australia,22,F,Basic,2023-07-10,1
+19,Sam Wilson,Dubai,UAE,44,M,Standard,2021-06-27,1
+20,Tina Malik,Abu Dhabi,UAE,31,F,Premium,2022-04-05,1
+21,Uma Okafor,Lagos,Nigeria,27,M,Basic,2023-08-19,1
+22,Victor Mensah,Accra,Ghana,39,M,Standard,2021-11-14,1
+23,Wendy Tan,Singapore,Singapore,33,F,Premium,2022-01-28,1
+24,Xander Liu,Hong Kong,China,46,M,Standard,2020-06-15,1
+25,Yara Muse,Nairobi,Kenya,25,F,Basic,2023-05-07,1
+26,Zoe Martinez,Mexico City,Mexico,32,F,Premium,2022-08-22,1
+27,Aaron Flores,Guadalajara,Mexico,29,M,Standard,2021-10-11,1
+28,Bella Rossi,Rome,Italy,36,F,Basic,2023-04-16,1
+29,Carlo Bianchi,Milan,Italy,43,M,Premium,2021-02-03,1
+30,Diana Muller,Berlin,Germany,28,F,Standard,2022-06-19,1

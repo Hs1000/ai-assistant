@@ -1,30 +1,45 @@
 # AI Insights Assistant
 
-AI Insights Assistant is a small full-stack app that answers natural language questions using three data sources:
+AI Insights Assistant is a full-stack app that answers natural language questions about streaming content performance using three data sources:
 
-- PDF reports for unstructured insights
+- SQL (SQLite) for structured queries across movies, viewers, watch activity, reviews, marketing spend, and regional performance
+- PDF reports for unstructured executive and campaign insights
 - CSV data for analytics
-- SQLite for structured movie records
 
-The backend is built with FastAPI, and the frontend is a lightweight HTML/JavaScript interface.
+The backend is built with FastAPI and the frontend is a lightweight HTML/React interface.
 
 ## Features
 
-- Multi-source query answering across PDF, CSV, and SQL
-- Automatic routing based on query intent
-- Source-aware responses
-- Automatic database initialization on backend startup
-- Genre distribution chart generated through an API endpoint
-- Simple local frontend for testing queries
+- Multi-source query answering across SQL, PDF, and CSV
+- Intent-based routing for six supported question types
+- Source-aware responses with data payloads
+- All six database tables auto-loaded from CSV on backend startup
+- Genre distribution chart via API endpoint
+- Template dropdown in the UI for all six required questions
+
+## Supported Questions
+
+| Question | Data Source |
+|---|---|
+| Which titles performed best in 2025? | SQL |
+| Why is Stellar Run trending recently? | SQL + PDF |
+| Compare Dark Orbit vs Last Kingdom | SQL |
+| Which city had the strongest engagement last month? | SQL |
+| What explains weak comedy performance? | SQL + PDF |
+| What recommendations would you give for leadership? | PDF + SQL |
 
 ## How It Works
 
 1. The frontend sends a query to `POST /chat`.
-2. The backend routes the query:
-   - CSV analytics for ranking/performance questions
-   - SQL for movie/database questions
-   - PDF retrieval as the generic default for report-style questions
-3. The selected tool returns data.
+2. The backend routes by intent:
+   - Comedy keywords → comedy analysis (SQL + PDF)
+   - Compare / vs → title comparison (SQL)
+   - Best / top / 2025 → top titles query (SQL)
+   - Trending / trend → trending title lookup (SQL + PDF)
+   - City / engagement / region → regional performance (SQL)
+   - Recommend / leadership / strategy → executive recommendations (PDF + SQL)
+   - Anything else → PDF section search, then fallback
+3. The selected tool returns structured data.
 4. The backend formats the answer and includes a source label.
 
 ## Project Structure
@@ -35,18 +50,28 @@ ai-assistant/
 │   ├── main.py
 │   ├── db.py
 │   ├── init_db.py
-│   ├── data.db
 │   ├── services/
 │   │   ├── ai_service.py
 │   │   └── hf_service.py
 │   └── tools/
-│       ├── __init__.py
 │       ├── csv_tools.py
 │       ├── pdf_tools.py
 │       └── sql_tools.py
 ├── data/
 │   ├── movies.csv
+│   ├── viewers.csv
+│   ├── watch_activity.csv
+│   ├── reviews.csv
+│   ├── marketing_spend.csv
+│   ├── regional_performance.csv
+│   ├── generate_movies.py
+│   ├── generate_pdfs.py
 │   └── pdfs/
+│       ├── quarterly_executive_report.pdf
+│       ├── campaign_performance_summary.pdf
+│       ├── content_roadmap.pdf
+│       ├── policy_guidelines.pdf
+│       └── audience_behavior_report.pdf
 ├── frontend/
 │   └── index.html
 ├── .env.example
@@ -76,126 +101,81 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Then edit `.env` and add your real value:
+## Running the Backend
 
-```env
-HF_API_KEY=your_huggingface_api_key_here
-```
-
-4. Start the backend:
+Run from the project root (not from inside `backend/`):
 
 ```bash
-cd backend
-uvicorn main:app --reload
+uvicorn backend.main:app --reload
 ```
 
-5. Start the frontend in another terminal:
+The backend starts at `http://127.0.0.1:8000` and automatically loads all six CSV tables into SQLite on startup.
+
+## Running the Frontend
+
+Open `frontend/index.html` directly in your browser, or serve it:
 
 ```bash
 cd frontend
 python -m http.server 5500
 ```
 
-Open `http://localhost:5500`.
+Then open `http://localhost:5500`.
 
 ## Database Initialization
 
-The SQLite database is initialized automatically when the FastAPI app starts.
+On startup, `db.py` loads all six CSV files into SQLite tables:
 
-On startup, `backend/main.py` calls `load_data()` from `backend/db.py`, which loads `data/movies.csv` into the `movies` table.
+| Table | Source CSV |
+|---|---|
+| `movies` | `data/movies.csv` |
+| `viewers` | `data/viewers.csv` |
+| `watch_activity` | `data/watch_activity.csv` |
+| `reviews` | `data/reviews.csv` |
+| `marketing_spend` | `data/marketing_spend.csv` |
+| `regional_performance` | `data/regional_performance.csv` |
 
-Current behavior:
+The database file (`backend/data.db`) is excluded from git. Each restart recreates all tables from the CSVs.
 
-- The active database file is `backend/data.db`
-- The movies table is recreated from the CSV on startup
+## Regenerating Data
 
-If you want to manually initialize it, you can still run:
+To regenerate the PDF reports:
 
 ```bash
-python backend/init_db.py
+python data/generate_pdfs.py
 ```
 
 ## API Endpoints
 
-- `GET /` - simple backend status message
-- `GET /health` - health check and env verification
-- `GET /movies` - returns all movie rows from SQLite
-- `POST /chat` - main AI query endpoint
-- `GET /chart` - returns the genre distribution chart as a PNG
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/` | Backend status |
+| `GET` | `/health` | Health check |
+| `GET` | `/movies` | All movie rows from SQLite |
+| `POST` | `/chat` | Main AI query endpoint |
+| `GET` | `/chart` | Genre distribution chart (PNG) |
 
 Example request:
 
 ```json
 {
-  "query": "Which movies performed best?"
+  "query": "Which titles performed best in 2025?"
 }
 ```
-
-## Example Queries
-
-### PDF / report queries
-
-- `What is summary?`
-- `What are audience behavior insights?`
-- `What is trending in the report?`
-
-### CSV / analytics queries
-
-- `Which movies performed best?`
-- `What is top movie performance?`
-
-### SQL / database queries
-
-- `Show all movies`
-- `How many movies are there?`
-- `Show movies in the database`
-
-## Visualization
-
-The app provides a chart endpoint at `GET /chart` that generates a genre distribution bar chart.
-
-For macOS/server safety, Matplotlib uses the non-GUI `Agg` backend so chart generation does not crash the FastAPI worker thread.
-
-## Environment Variables
-
-The project includes `.env.example` so secrets do not need to be committed.
-
-Currently used variables:
-
-- `HF_API_KEY` - used by `backend/services/hf_service.py`
-
-## Git Notes
-
-The project includes a `.gitignore` that excludes:
-
-- `.env`
-- local virtual environments
-- Python cache files
-- local database files
-- generated chart/image artifacts
-
-## Known Limitations
-
-- PDF retrieval is lexical/token based, not embedding-based semantic search
-- PDF extraction quality depends on how text is structured inside the source PDF
-- Query routing is practical but still simple
-- Database initialization currently reloads the CSV on each backend startup
-
-## Future Improvements
-
-- Add semantic PDF retrieval with embeddings
-- Return file/page metadata in chat responses
-- Improve intent routing with a more formal classifier
-- Add tests for routing and PDF section ranking
-- Avoid reloading the database if it already exists
 
 ## Tech Stack
 
 - FastAPI
-- SQLite
-- SQLAlchemy
+- SQLite + SQLAlchemy
 - Pandas
 - Matplotlib
 - PyPDF
+- ReportLab (PDF generation)
 - Python dotenv
-- HTML / CSS / JavaScript
+- HTML / CSS / React (via CDN)
+
+## Known Limitations
+
+- PDF retrieval is lexical/token-based, not embedding-based semantic search
+- Intent routing uses keyword matching, not an NLP classifier
+- Database is fully reloaded from CSV on every backend restart

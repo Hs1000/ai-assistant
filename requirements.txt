@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pandas
+sqlalchemy
+openai
+langchain
+pypdf
+python-dotenv
+reportlab
+requests
+pypdf
+matplotlib

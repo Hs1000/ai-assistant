@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Insights Assistant</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f5f9;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --ok: #0f766e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    h1 { margin: 0 0 16px; font-size: 24px; }
+    h2 { margin: 0 0 12px; font-size: 18px; }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 170px 170px auto;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    input, select, button, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:disabled { opacity: 0.7; cursor: not-allowed; }
+    .chat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 380px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .msg {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+    .msg.user { background: #eff6ff; }
+    .msg.assistant { background: #f9fafb; }
+    .meta { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .insight-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .insight {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .insight .label { font-size: 12px; color: var(--muted); }
+    .insight .value { font-size: 18px; font-weight: 700; margin-top: 4px; }
+    .bars { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .bar-row { display: grid; grid-template-columns: 80px 1fr 40px; gap: 8px; align-items: center; font-size: 13px; }
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #dbeafe;
+      overflow: hidden;
+    }
+    .bar > span { display: block; height: 100%; background: var(--accent); }
+    .history { max-height: 200px; overflow: auto; font-size: 13px; }
+    .trace {
+      border-bottom: 1px solid var(--border);
+      padding: 8px 0;
+    }
+    .trace:last-child { border-bottom: 0; }
+    @media (max-width: 960px) {
+      .app { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const API_BASE = "http://127.0.0.1:8000";
+
+    function App() {
+      const [query, setQuery] = React.useState("");
+      const [sourcePref, setSourcePref] = React.useState("auto");
+      const [template, setTemplate] = React.useState("none");
+      const [loading, setLoading] = React.useState(false);
+      const [messages, setMessages] = React.useState([]);
+      const [movies, setMovies] = React.useState([]);
+      const [genreFilter, setGenreFilter] = React.useState("all");
+
+      React.useEffect(() => {
+        fetchMovies();
+      }, []);
+
+      async function fetchMovies() {
+        try {
+          const res = await fetch(`${API_BASE}/movies`);
+          const data = await res.json();
+          setMovies(Array.isArray(data.data) ? data.data : []);
+        } catch (err) {
+          console.error("Failed to fetch movies", err);
+        }
+      }
+
+      function getFinalQuery() {
+        const base = template !== "none" ? template : query;
+        if (!base.trim()) return "";
+        if (sourcePref === "auto") return base;
+        return `[Use ${sourcePref.toUpperCase()}] ${base}`;
+      }
+
+      async function sendQuery() {
+        const finalQuery = getFinalQuery();
+        if (!finalQuery.trim()) return;
+
+        setLoading(true);
+        const userMessage = { role: "user", text: finalQuery };
+        setMessages(prev => [userMessage, ...prev]);
+
+        try {
+          const res = await fetch(`${API_BASE}/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: finalQuery })
+          });
+          const data = await res.json();
+          const assistantMessage = {
+            role: "assistant",
+            text: data.answer || "No answer returned.",
+            source: data.source || "Unknown",
+            at: new Date().toLocaleTimeString()
+          };
+          setMessages(prev => [assistantMessage, ...prev]);
+        } catch (err) {
+          setMessages(prev => [{
+            role: "assistant",
+            text: "Error connecting to backend.",
+            source: "Error",
+            at: new Date().toLocaleTimeString()
+          }, ...prev]);
+        } finally {
+          setLoading(false);
+          setQuery("");
+          setTemplate("none");
+        }
+      }
+
+      const genres = React.useMemo(() => {
+        const map = {};
+        movies.forEach(m => {
+          const g = m.genre || "Unknown";
+          map[g] = (map[g] || 0) + 1;
+        });
+        return map;
+      }, [movies]);
+
+      const filteredMovies = React.useMemo(() => {
+        if (genreFilter === "all") return movies;
+        return movies.filter(m => m.genre === genreFilter);
+      }, [movies, genreFilter]);
+
+      const avgRating = React.useMemo(() => {
+        if (!filteredMovies.length) return "N/A";
+        const total = filteredMovies.reduce((sum, m) => sum + (Number(m.rating) || 0), 0);
+        return (total / filteredMovies.length).toFixed(2);
+      }, [filteredMovies]);
+
+      const topGenre = React.useMemo(() => {
+        const entries = Object.entries(genres);
+        if (!entries.length) return "N/A";
+        entries.sort((a, b) => b[1] - a[1]);
+        return entries[0][0];
+      }, [genres]);
+
+      const maxGenreCount = Math.max(...Object.values(genres), 1);
+      const genreKeys = Object.keys(genres);
+      const lastAssistant = messages.find(m => m.role === "assistant");
+
+      return (
+        <div className="app">
+          <div className="card">
+            <h1>AI Insights Assistant</h1>
+            <div className="controls">
+              <input
+                placeholder="Ask anything (e.g. What is summary?)"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && sendQuery()}
+              />
+              <select value={sourcePref} onChange={e => setSourcePref(e.target.value)}>
+                <option value="auto">Auto Route</option>
+                <option value="pdf">PDF</option>
+                <option value="csv">CSV</option>
+                <option value="sql">SQL</option>
+              </select>
+              <select value={template} onChange={e => setTemplate(e.target.value)}>
+                <option value="none">No Template</option>
+                <option value="Which titles performed best in 2025?">Best Titles 2025</option>
+                <option value="Why is Stellar Run trending recently?">Why Stellar Run Trending</option>
+                <option value="Compare Dark Orbit vs Last Kingdom">Compare Dark Orbit vs Last Kingdom</option>
+                <option value="Which city had the strongest engagement last month?">City Engagement</option>
+                <option value="What explains weak comedy performance?">Comedy Performance</option>
+                <option value="What recommendations would you give for leadership?">Leadership Recommendations</option>
+              </select>
+              <button onClick={sendQuery} disabled={loading}>
+                {loading ? "Asking..." : "Ask"}
+              </button>
+            </div>
+
+            <h2>Chat Assistant</h2>
+            <div className="chat-list">
+              {messages.length === 0 && (
+                <div className="msg assistant">No messages yet. Ask your first query.</div>
+              )}
+              {messages.map((m, i) => (
+                <div key={i} className={`msg ${m.role}`}>
+                  {m.text}
+                  {m.source && <div className="meta">Source: {m.source} {m.at ? `• ${m.at}` : ""}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{display: "flex", flexDirection: "column", gap: "16px"}}>
+            <div className="card">
+              <h2>Filters / Selectors</h2>
+              <select value={genreFilter} onChange={e => setGenreFilter(e.target.value)}>
+                <option value="all">All Genres</option>
+                {genreKeys.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+              <div className="meta" style={{marginTop: "8px"}}>
+                Source preference and templates are available in the chat controls.
+              </div>
+            </div>
+
+            <div className="card">
+              <h2>Insights Panel</h2>
+              <div className="insight-grid">
+                <div className="insight">
+                  <div className="label">Movies Loaded</div>
+                  <div className="value">{movies.length}</div>
+                </div>
+                <div className="insight">
+                  <div className="label">Average Rating</div>
+                  <div className="value">{avgRating}</div>
+                </div>
+                <div className="insight">
+                  <div className="label">Top Genre</div>
+                  <div className="value">{topGenre}</div>
+                </div>
+                <div className="insight">
+                  <div className="label">Last Tool Used</div>
+                  <div className="value" style={{fontSize: "14px", marginTop: "8px"}}>
+                    {lastAssistant ? lastAssistant.source : "N/A"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <h2>Charts / Visual Summary</h2>
+              <div className="bars">
+                {genreKeys.length === 0 && <div className="meta">No chart data available.</div>}
+                {genreKeys.map(g => (
+                  <div className="bar-row" key={g}>
+                    <span>{g}</span>
+                    <div className="bar">
+                      <span style={{ width: `${(genres[g] / maxGenreCount) * 100}%` }} />
+                    </div>
+                    <strong>{genres[g]}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card">
+              <h2>Query History / Tool Trace</h2>
+              <div className="history">
+                {messages.filter(m => m.role === "assistant").length === 0 && (
+                  <div className="meta">No tool trace yet.</div>
+                )}
+                {messages
+                  .filter(m => m.role === "assistant")
+                  .map((m, i) => (
+                    <div key={i} className="trace">
+                      <div><strong>{m.source || "Unknown Source"}</strong></div>
+                      <div className="meta">{m.text.slice(0, 120)}{m.text.length > 120 ? "..." : ""}</div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
