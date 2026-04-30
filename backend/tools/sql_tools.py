@@ -17,11 +17,26 @@ def get_all_movies():
     return _query("SELECT * FROM movies ORDER BY rating DESC")
 
 
-def get_top_titles_2025():
+def get_best_movie():
+    rows = _query("SELECT * FROM movies ORDER BY rating DESC LIMIT 1")
+    return rows[0] if rows else None
+
+
+def get_top_titles(year=None):
+    if year:
+        return _query(
+            "SELECT title, genre, release_year, rating, total_views, trending_score "
+            "FROM movies WHERE release_year = :y ORDER BY rating DESC LIMIT 10",
+            y=int(year),
+        )
     return _query(
         "SELECT title, genre, release_year, rating, total_views, trending_score "
-        "FROM movies WHERE release_year = 2025 ORDER BY rating DESC LIMIT 10"
+        "FROM movies ORDER BY rating DESC LIMIT 10"
     )
+
+
+def get_top_titles_2025():
+    return get_top_titles(year=2025)
 
 
 def get_title_comparison(title_a: str, title_b: str):
