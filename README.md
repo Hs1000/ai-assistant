@@ -115,10 +115,12 @@ ai-assistant/
 │   ├── main.py
 │   ├── db.py
 │   ├── init_db.py
+│   ├── security.py
 │   ├── services/
 │   │   ├── ai_service.py
 │   │   └── hf_service.py
 │   └── tools/
+│       ├── __init__.py
 │       ├── csv_tools.py
 │       ├── pdf_tools.py
 │       └── sql_tools.py
@@ -136,11 +138,14 @@ ai-assistant/
 │       ├── campaign_performance_summary.pdf
 │       ├── content_roadmap.pdf
 │       ├── policy_guidelines.pdf
-│       └── audience_behavior_report.pdf
+│       ├── audience_behavior_report.pdf
+│       └── report.pdf
 ├── frontend/
 │   └── index.html
 ├── .env.example
 ├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
 ├── requirements.txt
 └── README.md
 ```
