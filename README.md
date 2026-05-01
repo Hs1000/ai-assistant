@@ -354,3 +354,6 @@ The system uses HuggingFace's `flan-t5-base` model for answer generation:
 
 ### Frontend
 - **No build step** — React and Babel are loaded from CDN. This avoids a Node.js dependency for a demo but is not suitable for production (no bundling, no tree-shaking, slower initial load).
+
+#Video Recording
+Demo Video - https://drive.google.com/file/d/1vWK66VKnn9-_-xM3LAmhv4Df7EQgtAwG/view?usp=sharing
