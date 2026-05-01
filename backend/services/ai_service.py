@@ -1,4 +1,6 @@
 import re
+import logging
+from services.hf_service import query_huggingface
 from tools.sql_tools import (
     get_all_movies,
     get_best_movie,
@@ -21,6 +23,18 @@ from tools.csv_tools import (
     analyze_movies,
 )
 from tools.pdf_tools import search_pdfs
+
+logger = logging.getLogger(__name__)
+
+
+def _ai_answer(query: str, structured_answer: str) -> str:
+    """Try HuggingFace; fall back to structured answer if unavailable."""
+    hf = query_huggingface(query, structured_answer)
+    if hf:
+        logger.info("Using HuggingFace answer for query: %s", query[:60])
+        return f"{hf}\n\n---\nSource data:\n{structured_answer}"
+    logger.debug("HuggingFace unavailable — using structured answer")
+    return structured_answer
 
 
 def _fmt_movie(m):
@@ -328,6 +342,8 @@ def _answer_from_sql_pdf(q, raw_query):
 
 def run_agent(query: str):
     try:
+        logger.info("Query received: %s", query[:120])
+
         # Detect source override from frontend dropdown ([Use CSV], [Use SQL], [Use PDF])
         csv_forced = "[use csv]" in query.lower()
         pdf_forced = "[use pdf]" in query.lower()
@@ -337,16 +353,24 @@ def run_agent(query: str):
         q = clean.lower()
 
         if csv_forced:
-            return _answer_from_csv(q)
-
-        if pdf_forced:
+            logger.info("Source override: CSV Direct")
+            result = _answer_from_csv(q)
+        elif pdf_forced:
+            logger.info("Source override: PDF")
             pdf_data = search_pdfs(clean)
             if pdf_data and isinstance(pdf_data, list) and "content" in pdf_data[0]:
-                return {"answer": f"From the reports:\n\n{pdf_data[0]['content'][:900]}", "source": "PDF Documents"}
-            return {"answer": "No relevant PDF content found.", "source": "PDF Documents"}
+                result = {"answer": f"From the reports:\n\n{pdf_data[0]['content'][:900]}", "source": "PDF Documents"}
+            else:
+                result = {"answer": "No relevant PDF content found.", "source": "PDF Documents"}
+        else:
+            logger.info("Source: Auto (SQL + PDF)")
+            result = _answer_from_sql_pdf(q, clean)
 
-        # Default: SQL + PDF
-        return _answer_from_sql_pdf(q, clean)
+        # Pass through HuggingFace to generate / rephrase the final answer
+        result["answer"] = _ai_answer(clean, result["answer"])
+        logger.info("Response ready — source: %s", result.get("source"))
+        return result
 
     except Exception as e:
+        logger.error("run_agent error: %s", e, exc_info=True)
         return {"answer": f"Internal error: {str(e)}", "source": "Error"}

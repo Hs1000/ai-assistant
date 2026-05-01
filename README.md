@@ -147,6 +147,8 @@ ai-assistant/
 
 ## Setup
 
+### Option A — Local
+
 1. Create and activate a virtual environment:
 
 ```bash
@@ -165,6 +167,17 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 ```
+
+Edit `.env` and fill in your values (see [Environment Variables](#environment-variables)).
+
+### Option B — Docker
+
+```bash
+cp .env.example .env   # fill in your values
+docker-compose up --build
+```
+
+Backend runs at `http://localhost:8000`, frontend at `http://localhost:5500`.
 
 ## Running the Backend
 
@@ -210,14 +223,70 @@ To regenerate the PDF reports:
 python data/generate_pdfs.py
 ```
 
+## Security
+
+| Mechanism | Detail |
+|---|---|
+| API key auth | Set `API_KEY` in `.env`; supply as `X-API-Key` header. If unset, auth is skipped (dev mode). |
+| Rate limiting | 30 requests/minute per IP via `slowapi` |
+| Input validation | Max 500 chars, blocks SQL injection patterns (`DROP`, `--`, `<script>`, etc.) |
+| CORS | Restricted to `ALLOWED_ORIGINS` env var (defaults to localhost only) |
+| Security headers | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` on every response |
+
+Example authenticated request:
+
+```bash
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your_secret_api_key_here" \
+  -d '{"query": "Which titles performed best in 2025?"}'
+```
+
+### Generating an API Key
+
+Use Python to generate a cryptographically secure random key:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+This outputs a 64-character hex string, for example:
+
+```
+a3f8c2e1d4b7f9a0e5c8d2b1f4a7e3c6d9b2f5a8e1c4d7b0f3a6e9c2d5b8f1a4
+```
+
+Copy it into your `.env` file:
+
+```env
+API_KEY=a3f8c2e1d4b7f9a0e5c8d2b1f4a7e3c6d9b2f5a8e1c4d7b0f3a6e9c2d5b8f1a4
+```
+
+**Rules:**
+- Never commit `.env` to git (already excluded by `.gitignore`)
+- Don't reuse this key for other services
+- For production, store it in a secrets manager (AWS Secrets Manager, GitHub Secrets, etc.) rather than a flat file
+- Rotate it periodically
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `HF_API_KEY` | Optional | HuggingFace token for AI answer generation. Without it, structured answers are returned directly. |
+| `API_KEY` | Optional | Protects all endpoints. Leave blank to disable auth in dev. |
+| `ALLOWED_ORIGINS` | Optional | Comma-separated CORS origins. Defaults to `http://localhost:5500,http://127.0.0.1:5500`. |
+
 ## API Endpoints
+
+All endpoints (except `/` and `/health`) require `X-API-Key` header when `API_KEY` is set.
 
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/` | Backend status |
-| `GET` | `/health` | Health check |
+| `GET` | `/health` | Health check + env flag status |
 | `GET` | `/movies` | All movie rows from SQLite |
-| `POST` | `/chat` | Main AI query endpoint |
+| `POST` | `/chat` | Main AI query endpoint (rate limited: 30/min) |
+| `POST` | `/ingest` | Reload all CSV files into SQLite |
 | `GET` | `/chart` | Genre distribution chart (PNG) |
 
 Example request:
@@ -228,15 +297,27 @@ Example request:
 }
 ```
 
+## AI Layer
+
+The system uses HuggingFace's `flan-t5-base` model for answer generation:
+
+1. Query intent is detected and routed to the appropriate data tool (SQL / CSV / PDF)
+2. The tool retrieves structured data and formats a context string
+3. The context + question are passed to `flan-t5-base` via the HuggingFace Inference API
+4. The model generates a natural language answer
+5. If HuggingFace is unavailable (no key, timeout, error), the structured answer is returned directly as a fallback
+
 ## Tech Stack
 
-- FastAPI
+- FastAPI + slowapi (rate limiting)
 - SQLite + SQLAlchemy
 - Pandas
 - Matplotlib
 - PyPDF
 - ReportLab (PDF generation)
+- HuggingFace Inference API (flan-t5-base)
 - Python dotenv
+- Docker + nginx
 - HTML / CSS / React (via CDN)
 
 ## Known Limitations
